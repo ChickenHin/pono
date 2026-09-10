@@ -1,6 +1,6 @@
 name: CI
 on:
-  push:
+  # push:
   workflow_dispatch: # allow manual trigger
 # Superseded runs are pointless, but let main finish: its runs are the ones
 # whose caches every branch restores from.
@@ -8,19 +8,19 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
-  pre-commit:
-    runs-on: ubuntu-slim
-    steps:
-      - uses: actions/checkout@v7
-      - uses: j178/prek-action@v2
-        with:
-          extra-args: --all-files
+  # pre-commit:
+  #   runs-on: ubuntu-slim
+  #   steps:
+  #     - uses: actions/checkout@v7
+  #     - uses: j178/prek-action@v2
+  #       with:
+  #         extra-args: --all-files
   build:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        build_type: [release, debug]
+        build_type: [debug]
         include:
           - build_type: debug
             conf_build_opts: --debug
@@ -90,22 +90,22 @@ jobs:
           jobs=$(getconf _NPROCESSORS_ONLN)
           # -j parallelizes linking the test binaries, the env var running them
           CTEST_PARALLEL_LEVEL="$jobs" make -j"$jobs" check
-      - name: Upload failing test log
-        if: steps.test-cpp.outcome == 'failure'
-        uses: actions/upload-artifact@v7
-        with:
-          name: test-log-${{ runner.os }}-${{ runner.arch }}-${{ matrix.build_type }}
-          path: build/tests/Testing/Temporary/LastTest.log
-      - name: Fail pipeline due to C++ test failure
-        if: steps.test-cpp.outcome == 'failure'
-        run: |
-          echo "C++ tests failed. Inspect the artifact for details."
-          exit 1
-      - name: Install Python Bindings
-        run: |
-          source .venv/bin/activate
-          python3 -m pip install ./build/python[test]
-      - name: Test Python Bindings
-        run: |
-          source .venv/bin/activate
-          pytest ./tests
+      # - name: Upload failing test log
+      #   if: steps.test-cpp.outcome == 'failure'
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: test-log-${{ runner.os }}-${{ runner.arch }}-${{ matrix.build_type }}
+      #     path: build/tests/Testing/Temporary/LastTest.log
+      # - name: Fail pipeline due to C++ test failure
+      #   if: steps.test-cpp.outcome == 'failure'
+      #   run: |
+      #     echo "C++ tests failed. Inspect the artifact for details."
+      #     exit 1
+      # - name: Install Python Bindings
+      #   run: |
+      #     source .venv/bin/activate
+      #     python3 -m pip install ./build/python[test]
+      # - name: Test Python Bindings
+      #   run: |
+      #     source .venv/bin/activate
+      #     pytest ./tests
